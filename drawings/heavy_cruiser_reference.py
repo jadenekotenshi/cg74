@@ -18,7 +18,7 @@ Output: CG74-new.png (current directory)
 import math
 from PIL import Image, ImageDraw, ImageFont
 
-W, H = 2400, 2650
+W, H = 2400, 1850
 
 BG = (10, 21, 38)
 HULL_FILL = (66, 74, 88)
@@ -80,6 +80,24 @@ def place_tiered(entries, tiers, clamp=(120, W - 120)):
         leader_label(point, (x, tier_y), text, sub, anchor="ma")
 
 
+def place_tiered_split(entries, tiers_clear, tiers_blocked, split_x, clamp=(120, W - 120)):
+    """Like place_tiered, but entries whose point is left of split_x get a
+    tight tier band close to the hull (no obstruction up there), while
+    entries at/past split_x (which would run into the characteristics
+    panel) use a separate, lower tier band -- mirroring how the original
+    diagram keeps most labels short and only pushes bow-area ones down."""
+    left = sorted([e for e in entries if e[0][0] < split_x], key=lambda e: e[0][0])
+    right = sorted([e for e in entries if e[0][0] >= split_x], key=lambda e: e[0][0])
+    for i, (point, text, sub) in enumerate(left):
+        tier_y = tiers_clear[i % len(tiers_clear)]
+        x = min(max(point[0], clamp[0]), clamp[1])
+        leader_label(point, (x, tier_y), text, sub, anchor="ma")
+    for i, (point, text, sub) in enumerate(right):
+        tier_y = tiers_blocked[i % len(tiers_blocked)]
+        x = min(max(point[0], clamp[0]), clamp[1])
+        leader_label(point, (x, tier_y), text, sub, anchor="ma")
+
+
 def cell_grid(x0, y0, x1, y1, rows, cols, fill, pad=6, outline=HULL_LINE):
     draw.rectangle([x0, y0, x1, y1], fill=fill, outline=outline)
     ix0, iy0, ix1, iy1 = x0 + pad, y0 + pad, x1 - pad, y1 - pad
@@ -108,7 +126,7 @@ draw.text((44, 86), "General arrangement — plan & profile · 890 ft (272 m)", 
 draw.line([(44, 122), (900, 122)], fill=PANEL_LINE, width=2)
 
 # Principal characteristics panel (two label:value columns)
-panel = (1610, 34, 2360, 464)
+panel = (1610, 34, 2360, 300)
 draw.rectangle(panel, outline=PANEL_LINE, width=2)
 draw.text((panel[0] + 18, panel[1] + 16), "PRINCIPAL CHARACTERISTICS", font=f_panel_head, fill=TEXT_WHITE)
 left_stats = [
@@ -134,24 +152,24 @@ right_stats = [
     ("Sonar", "SQS-53 hull sonar, towed array"),
     ("Propulsion", "8 GT engines on 4 shafts"),
 ]
-ry = panel[1] + 52
+ry = panel[1] + 46
 for k, v in left_stats:
     draw.text((panel[0] + 18, ry), k, font=f_panel_row, fill=TEXT_DIM)
     draw.text((panel[0] + 170, ry), v, font=f_panel_row, fill=TEXT_WHITE)
-    ry += 23
-ry = panel[1] + 52
+    ry += 21
+ry = panel[1] + 46
 rx = panel[0] + 430
 for k, v in right_stats:
     draw.text((rx, ry), k, font=f_panel_row, fill=TEXT_DIM)
     draw.text((rx + 110, ry), v, font=f_panel_row, fill=TEXT_WHITE)
-    ry += 23
+    ry += 21
 
 # ---------------------------------------------------------------------------
 # Shared hull geometry
 # ---------------------------------------------------------------------------
 STERN_X, BOW_X = 190, 2260
 FT_PX = (BOW_X - STERN_X) / 890.0
-BEAM = 128
+BEAM = 118
 
 
 def hull_x(t):
@@ -172,8 +190,8 @@ def half_beam(t):
 # ---------------------------------------------------------------------------
 # Plan view
 # ---------------------------------------------------------------------------
-draw.text((44, 258), "PLAN VIEW", font=f_section, fill=TEXT_WHITE)
-PLAN_Y = 960
+draw.text((44, 150), "PLAN VIEW", font=f_section, fill=TEXT_WHITE)
+PLAN_Y = 480
 
 
 def hull_point(t, side):
@@ -191,6 +209,8 @@ def turret(t_center, facing):
     hb = half_beam(t_center)
     rx, ry_ = hb * 0.62, hb * 0.7
     draw.rectangle([x - rx, PLAN_Y - ry_, x + rx, PLAN_Y + ry_], fill=TURRET_FILL, outline=HULL_LINE)
+    for tx in range(int(x - rx) + 8, int(x + rx) - 4, 10):
+        draw.line([(tx, PLAN_Y - ry_ + 6), (tx, PLAN_Y + ry_ - 6)], fill=(70, 75, 84), width=2)
     for off in (-9, 9):
         draw.line([(x, PLAN_Y + off), (x + facing * (rx + 90), PLAN_Y + off)], fill=(205, 208, 212), width=6)
     return (x, PLAN_Y)
@@ -226,10 +246,14 @@ fd_hb = half_beam(0.25) * 0.92
 draw.rectangle([fd_x0, PLAN_Y - fd_hb, fd_x1, PLAN_Y + fd_hb], fill=DECK_FILL, outline=HULL_LINE)
 for gx in range(int(fd_x0) + 10, int(fd_x1) - 5, 16):
     draw.line([(gx, PLAN_Y - fd_hb + 6), (gx, PLAN_Y + fd_hb - 6)], fill=(80, 88, 100), width=1)
-helo_cx = hull_x(0.245)
-draw.ellipse([helo_cx - 42, PLAN_Y - 42, helo_cx + 42, PLAN_Y + 42], outline=(220, 190, 60), width=4)
-draw.line([(helo_cx - 42, PLAN_Y), (helo_cx + 42, PLAN_Y)], fill=(220, 190, 60), width=4)
-draw.line([(helo_cx, PLAN_Y - 42), (helo_cx, PLAN_Y + 42)], fill=(220, 190, 60), width=4)
+helo_cx = hull_x(0.235)
+draw.ellipse([helo_cx - 38, PLAN_Y - 38, helo_cx + 38, PLAN_Y + 38], outline=(220, 190, 60), width=4)
+draw.line([(helo_cx - 38, PLAN_Y), (helo_cx + 38, PLAN_Y)], fill=(220, 190, 60), width=4)
+draw.line([(helo_cx, PLAN_Y - 38), (helo_cx, PLAN_Y + 38)], fill=(220, 190, 60), width=4)
+# Turntable/elevator fitting, aft of the helo spot
+turntable_cx = hull_x(0.29)
+draw.ellipse([turntable_cx - 33, PLAN_Y - 33, turntable_cx + 33, PLAN_Y + 33], fill=(78, 86, 98), outline=HULL_LINE)
+draw.ellipse([turntable_cx - 8, PLAN_Y - 8, turntable_cx + 8, PLAN_Y + 8], fill=(58, 64, 74), outline=HULL_LINE)
 
 # --- Hangar (Coyote UAV roof, 30mm x2, RAM aft edge) ---
 hx0, hx1 = hull_x(0.30), hull_x(0.375)
@@ -392,8 +416,14 @@ draw.ellipse([bow_tip_x - 6, PLAN_Y - 10, bow_tip_x + 14, PLAN_Y + 10], fill=HUL
 # ---------------------------------------------------------------------------
 # Plan view labels
 # ---------------------------------------------------------------------------
-ABOVE_TIERS = [PLAN_Y - 160, PLAN_Y - 215, PLAN_Y - 270, PLAN_Y - 325, PLAN_Y - 380, PLAN_Y - 435]
-BELOW_TIERS = [PLAN_Y + 150, PLAN_Y + 205, PLAN_Y + 260, PLAN_Y + 315, PLAN_Y + 370, PLAN_Y + 425]
+# Above-hull labels: most of the ship has clear sky up to the header, so
+# those get a tight tier band close to the hull (short leaders, like the
+# original). Only the bow-area labels that would run into the
+# characteristics panel (x >= PANEL_LEFT) drop to a lower band beneath it.
+PANEL_LEFT = panel[0]
+ABOVE_TIERS_CLEAR = [PLAN_Y - 135, PLAN_Y - 180, PLAN_Y - 225, PLAN_Y - 270, PLAN_Y - 315]
+ABOVE_TIERS_BLOCKED = [PLAN_Y - 140]
+BELOW_TIERS = [PLAN_Y + 100, PLAN_Y + 140, PLAN_Y + 180, PLAN_Y + 220, PLAN_Y + 260, PLAN_Y + 300]
 
 above_entries = [
     (aft_turret_pt, "TWIN 203 MM", "tier 1 — fantail, aft"),
@@ -411,13 +441,13 @@ above_entries = [
     (mm30_fwd_pts[0], "30 MM x2", "fwd, outboard of RAM"),
     (fwd_turret_pt, "TWIN 203 MM", "No.1 — forward"),
 ]
-place_tiered(above_entries, ABOVE_TIERS)
+place_tiered_split(above_entries, ABOVE_TIERS_CLEAR, ABOVE_TIERS_BLOCKED, PANEL_LEFT - 90)
 
 below_entries = [
     (mk57_aft_bot[:2], "MK 57 x24", "flanking the gun"),
     (mk57_fwd_bot[:2], "MK 57 x20", "flanking aft VLS"),
     ((hx0 + 20, PLAN_Y + h_hb), "HANGAR", "fwd of flight deck"),
-    ((helo_cx, PLAN_Y + 42), "MH-60R", "on flight deck"),
+    ((helo_cx, PLAN_Y + 38), "MH-60R", "on flight deck"),
     (ram_hangar_pt, "RAM", "hangar aft edge"),
     (kingpost_pts[1], "UNREP KINGPOSTS", "P/S, canted inboard"),
     (laser_pts[1], "LASER x2 (P/S)", "fwd roof, fwd of MG"),
@@ -436,11 +466,11 @@ place_tiered(below_entries, BELOW_TIERS)
 # ---------------------------------------------------------------------------
 # Profile / side elevation
 # ---------------------------------------------------------------------------
-PROFILE_HEADER_Y = 1500
+PROFILE_HEADER_Y = 990
 draw.text((44, PROFILE_HEADER_Y), "PROFILE / SIDE ELEVATION", font=f_section, fill=TEXT_WHITE)
 
-DECK_Y = PROFILE_HEADER_Y + 480
-KEEL_Y = DECK_Y + 110
+DECK_Y = PROFILE_HEADER_Y + 430
+KEEL_Y = DECK_Y + 70
 WATERLINE_Y = KEEL_Y - 25
 
 hull_side = [
@@ -509,11 +539,11 @@ icon(roof_cx - 20, bridge_top - 6, "circle", NULKA_FILL, size=13)
 
 # Mast (SPQ-9B atop, SPY-3 4-face, Satcom/TACAN/HF)
 mast_px = hull_x(0.685)
-mast_top_y = bridge_top - 145
+mast_top_y = bridge_top - 100
 draw.line([(mast_px, bridge_top), (mast_px, mast_top_y)], fill=(210, 210, 215), width=5)
 icon(mast_px, mast_top_y, "circle", SPY3_FILL, size=15)
-icon(mast_px - 4, mast_top_y + 55, "circle", LASER_FILL, size=16)
-for wy in range(int(mast_top_y) + 85, bridge_top - 15, 26):
+icon(mast_px - 4, mast_top_y + 38, "circle", LASER_FILL, size=16)
+for wy in range(int(mast_top_y) + 55, bridge_top - 15, 22):
     draw.line([(mast_px - 18, wy), (mast_px + 18, wy)], fill=(150, 155, 160), width=3)
 
 # Forward turret (No.1) profile
@@ -553,10 +583,10 @@ profile_above = [
     ((gt_x0 + 20, gt_top), "GT INTAKE GRILLES", None),
     ((bridge_x0 + 15, bridge_top + 50), "SPY-6 (OCTAGONAL BRIDGE)", None),
     ((mast_px, mast_top_y), "SPQ-9B ATOP MAST", None),
-    ((mast_px - 4, mast_top_y + 55), "SPY-3 (4-FACE)", "cardinal, on mast"),
-    ((mast_px, mast_top_y + 100), "SATCOM/TACAN/HF", None),
+    ((mast_px - 4, mast_top_y + 38), "SPY-3 (4-FACE)", "cardinal, on mast"),
+    ((mast_px, mast_top_y + 70), "SATCOM/TACAN/HF", None),
 ]
-place_tiered(profile_above, [mast_top_y - 30, mast_top_y - 75, mast_top_y - 120, mast_top_y - 165, mast_top_y - 210])
+place_tiered(profile_above, [mast_top_y - 20, mast_top_y - 60, mast_top_y - 100])
 
 profile_below = [
     ((STERN_X + 15, DECK_Y + 55), "FLARED TRANSOM", None),
@@ -568,12 +598,12 @@ profile_below = [
     ((roof_cx - 20, bridge_top - 6), "NULKA (ROOF) / PHALANX", None),
     ((bulb_cx, bulb_box[3]), "BULBOUS BOW + SQS-53 SONAR DOME", None),
 ]
-place_tiered(profile_below, [DECK_Y + 150, DECK_Y + 200, DECK_Y + 250, DECK_Y + 300, DECK_Y + 350])
+place_tiered(profile_below, [DECK_Y + 130, DECK_Y + 170, DECK_Y + 210, DECK_Y + 250, DECK_Y + 290])
 
 # ---------------------------------------------------------------------------
 # Missile & guided-munition fit
 # ---------------------------------------------------------------------------
-mbox = (1740, 1560, 2360, 1860)
+mbox = (1750, 1000, 2360, 1300)
 draw.rectangle(mbox, outline=PANEL_LINE, width=2)
 draw.text((mbox[0] + 18, mbox[1] + 16), "MISSILE & GUIDED-MUNITION FIT", font=f_panel_head, fill=TEXT_WHITE)
 missile_left = [
