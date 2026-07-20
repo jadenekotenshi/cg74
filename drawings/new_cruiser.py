@@ -18,8 +18,8 @@ Superstructure massing aft-to-fwd:
   Burke-style projecting platform on its fwd face, an octagonal
   LPD-17-style stealth mast (SPQ-9B atop) somewhat fwd of center
   flanked by 2x Phalanx CIWS, and a RAM Mk49 launcher at its fwd edge
-  | fwd 64-cell Mk41 w/ Mk57 x2 1x4 modules P/S flanking it | Mk 142
-  8"/65 (203 mm) main gun, twin barrel, true-scale | ogive bow
+  | fwd 64-cell Mk41 w/ Mk57 x2 1x4 modules P/S flanking it | BAE
+  Mk 45 Mod 4 127mm/62 main gun, single barrel, true-scale | ogive bow
 
 Also adds SPECIFICATIONS and GUIDED-WEAPON LOADOUT insets top-right.
 
@@ -265,45 +265,38 @@ def laser_profile(cx, base_y, height=18, r=8, facing=1):
     draw.ellipse([lx - 3, dome_cy - 3, lx + 3, dome_cy + 3], fill=(90, 160, 200), outline=HULL_LINE)
 
 
-def gun76_plan(cx, cy, angle_deg=0):
-    """OTO Melara 76/62 STRALES, plan view: the real turret is a low,
-    asymmetric "home-plate" stealth shape -- flat wide back, faceted
-    sides tapering to a narrow front where the single 62-caliber barrel
-    exits -- plus the DAVIDE-guidance EO/IR tracker pod on the roof,
-    offset to one side. Rotated to face `angle_deg`."""
-    l, w = 24, 15
-    local = [
-        (-l * 0.5, -w * 0.5), (-l * 0.5, w * 0.5),
-        (l * 0.12, w * 0.42), (l * 0.5, 0), (l * 0.12, -w * 0.42),
-    ]
+def mk110_plan(cx, cy, angle_deg=0):
+    """BAE (Bofors) Mk 110 57mm, plan view: a compact, smoothly rounded
+    low-observable dome -- rounder and noticeably smaller in footprint
+    than the angular OTO Melara guns -- with a single thin 70-caliber
+    barrel exiting the nose. Rotated to face `angle_deg`."""
+    l, w = 16, 10
+    n = 20
+    local = [(l / 2 * math.cos(2 * math.pi * i / n), w / 2 * math.sin(2 * math.pi * i / n)) for i in range(n)]
     rad = math.radians(angle_deg)
     ca, sa = math.cos(rad), math.sin(rad)
     pts = [(cx + lx * ca - ly * sa, cy + lx * sa + ly * ca) for lx, ly in local]
     draw.polygon(pts, fill=(70, 76, 88), outline=HULL_LINE)
-    dlx, dly = -l * 0.08, w * 0.22
-    dx, dy = cx + dlx * ca - dly * sa, cy + dlx * sa + dly * ca
-    draw.ellipse([dx - 2.5, dy - 2.5, dx + 2.5, dy + 2.5], fill=(30, 34, 42), outline=HULL_LINE)
-    bx, by = cx + ca * (l * 0.5 + 24), cy + sa * (l * 0.5 + 24)
-    draw.line([(cx + ca * l * 0.5, cy + sa * l * 0.5), (bx, by)], fill=(180, 184, 190), width=3)
+    bx, by = cx + ca * (l / 2 + 18), cy + sa * (l / 2 + 18)
+    draw.line([(cx + ca * l / 2, cy + sa * l / 2), (bx, by)], fill=(180, 184, 190), width=3)
 
 
-def gun76_profile(cx, base_y, height=15, facing=1):
-    """STRALES turret, profile: low sloped stealth wedge -- taller,
-    flat-faced at the rear, with the roofline sloping down (past a
-    slight ridge where the EO/IR pod sits) to a low front where the
-    long, thin barrel exits near the bottom of the face."""
-    rear_x = cx - facing * 10
-    front_x = cx + facing * 10
-    ridge_x = cx - facing * 2
-    draw.polygon([
-        (rear_x, base_y), (rear_x, base_y - height),
-        (ridge_x, base_y - height * 1.1),
-        (front_x, base_y - height * 0.4), (front_x, base_y),
-    ], fill=(70, 76, 88), outline=HULL_LINE)
-    ridge_y = base_y - height * 1.1
-    draw.ellipse([ridge_x - 2.5, ridge_y - 4, ridge_x + 2.5, ridge_y], fill=(30, 34, 42), outline=HULL_LINE)
-    by = base_y - height * 0.4
-    draw.line([(front_x, by), (front_x + facing * 22, by)], fill=(180, 184, 190), width=3)
+def mk110_profile(cx, base_y, height=9, facing=1):
+    """Mk 110 turret, profile: low, smoothly rounded dome (a semi-ellipse
+    in silhouette, vs. the OTO guns' angular sloped-wedge shape), single
+    thin barrel exiting low on the front face."""
+    half_w = 7
+    n = 14
+    pts = []
+    for i in range(n + 1):
+        lx = -half_w + 2 * half_w * i / n
+        ly = -height * math.sqrt(max(0, 1 - (lx / half_w) ** 2))
+        pts.append((cx + lx, base_y + ly))
+    pts.append((cx + half_w, base_y))
+    pts.append((cx - half_w, base_y))
+    draw.polygon(pts, fill=(70, 76, 88), outline=HULL_LINE)
+    by = base_y - height * 0.35
+    draw.line([(cx + facing * half_w * 0.8, by), (cx + facing * (half_w + 16), by)], fill=(180, 184, 190), width=3)
 
 
 def deck_box_launcher(cx, cy, angle_deg=0, w=10, l=14, fill=(66, 72, 84), tube_dots=0):
@@ -429,7 +422,7 @@ def rhib_davit_profile(cx, base_y, height=16):
 # Header
 # ---------------------------------------------------------------------------
 draw.text((40, 28), "CG-74 DENVER-CLASS CRUISER — CONJECTURAL SKETCH", font=f_title, fill=TEXT_WHITE)
-draw.text((40, 72), "WIP · twin Mk 142 8\"/65 gun fwd · 750 ft (229 m) LOA",
+draw.text((40, 72), "WIP · BAE Mk 45 Mod 4 127mm/62 gun fwd · 750 ft (229 m) LOA",
           font=f_subtitle, fill=TEXT_DIM)
 draw.line([(40, 104), (1500, 104)], fill=(70, 90, 120), width=2)
 
@@ -650,18 +643,18 @@ torp_y_off = half_beam(MIDSHIPS[0]) - 14
 for side in (-1, 1):
     torpedo_mount(pyr_x0 - 4, PLAN_Y + side * torp_y_off, side, SUPER_FILL)
 
-# 4x OTO Melara 76mm STRALES (2 P/S), flanking midships along its
-# length, facing outward -- plus a twin .50 cal amidships between them.
-gun76_y = 96
-gun76_aft_x = pyr_x0 + 40
-gun76_fwd_x = pyr_x1 - 40
-gun76_positions = {}
+# 4x BAE Mk 110 57mm (2 P/S), flanking midships along its length,
+# facing outward -- plus a twin .50 cal amidships between them.
+mk110_y = 96
+mk110_aft_x = pyr_x0 + 40
+mk110_fwd_x = pyr_x1 - 40
+mk110_positions = {}
 for side in (-1, 1):
     ang = 90 if side > 0 else 270
-    for label_key, gx in (("aft", gun76_aft_x), ("fwd", gun76_fwd_x)):
-        gun76_plan(gx, PLAN_Y + side * gun76_y, angle_deg=ang)
-        gun76_positions[(side, label_key)] = (gx, PLAN_Y + side * gun76_y)
-    twin50_plan(gun76_aft_x + (gun76_fwd_x - gun76_aft_x) / 2, PLAN_Y + side * gun76_y, angle_deg=ang)
+    for label_key, gx in (("aft", mk110_aft_x), ("fwd", mk110_fwd_x)):
+        mk110_plan(gx, PLAN_Y + side * mk110_y, angle_deg=ang)
+        mk110_positions[(side, label_key)] = (gx, PLAN_Y + side * mk110_y)
+    twin50_plan(mk110_aft_x + (mk110_fwd_x - mk110_aft_x) / 2, PLAN_Y + side * mk110_y, angle_deg=ang)
 
 # Mk57 flanking LD-VLS, at the outer deck edges -- a single row, tucked
 # in just aft of the Mk32 mounts (the aft Mk41 has its own flanking
@@ -829,33 +822,30 @@ for side in (-1, 1):
                  n_modules=2, fill=MISSILE_DECK_FILL, gap=fwd_mk57_gap)
     fwd_mk57_boxes[side] = (fwd_mk57_block_x0, y0, fwd_mk57_block_x0 + fwd_mk57_block_w, y1)
 
-# Mk 142 8"/65 (203 mm) main gun, twin barrel, true-scale, forward of
-# the fwd VLS complex -- boxy, angular turret on a barbette (ref: USS
-# Hull's Mk 71 trials mount, redesignated Mk 142 for this class),
-# enlarged and lengthened for the twin 65-caliber mount.
-GUN_BARREL_PX = 43.33 * FT_PX   # 203 mm / 65 calibers
-gun_len_px, gun_wid_px = 27 * FT_PX, 24 * FT_PX
-barbette_r_px = 13 * FT_PX
-BARREL_SEP_PX = 6.5 * FT_PX   # twin-barrel centerline spacing
+# BAE Mk 45 Mod 4 127mm/62 main gun, single barrel, true-scale, forward
+# of the fwd VLS complex -- the Mod 4's low-observable shroud is a
+# boxier, slab-sided stealth shape than the OTO Melara guns (flat rear,
+# straight-tapered sides to a flat -- not pointed -- front face where
+# the barrel exits), on a barbette sized for a 5"/62 mount.
+GUN_BARREL_PX = (127 * 62 / 304.8) * FT_PX   # 127 mm / 62 calibers ~= 25.8 ft
+gun_len_px, gun_wid_px = 21 * FT_PX, 13 * FT_PX
+barbette_r_px = 8 * FT_PX
 gun_rear_x = fwd_mk41_x1 + 30
 gun_front_x = gun_rear_x + gun_len_px
 gun_cx = (gun_rear_x + gun_front_x) / 2
 draw.ellipse([gun_cx - barbette_r_px, PLAN_Y - barbette_r_px, gun_cx + barbette_r_px, PLAN_Y + barbette_r_px],
              fill=(72, 78, 90), outline=HULL_LINE)
 gun_pts = [
-    (gun_rear_x, PLAN_Y - gun_wid_px * 0.42), (gun_rear_x + 8, PLAN_Y - gun_wid_px / 2),
-    (gun_cx + 6, PLAN_Y - gun_wid_px / 2), (gun_front_x, PLAN_Y - gun_wid_px * 0.28),
-    (gun_front_x, PLAN_Y + gun_wid_px * 0.28), (gun_cx + 6, PLAN_Y + gun_wid_px / 2),
-    (gun_rear_x + 8, PLAN_Y + gun_wid_px / 2), (gun_rear_x, PLAN_Y + gun_wid_px * 0.42),
+    (gun_rear_x, PLAN_Y - gun_wid_px / 2), (gun_rear_x, PLAN_Y + gun_wid_px / 2),
+    (gun_front_x, PLAN_Y + gun_wid_px * 0.32), (gun_front_x, PLAN_Y - gun_wid_px * 0.32),
 ]
 draw.polygon(gun_pts, fill=(80, 86, 98), outline=HULL_LINE)
 barrel_tip_x = gun_front_x + GUN_BARREL_PX
-for off in (-BARREL_SEP_PX / 2, BARREL_SEP_PX / 2):
-    draw.line([(gun_front_x, PLAN_Y + off), (barrel_tip_x, PLAN_Y + off)], fill=(180, 184, 190), width=5)
+draw.line([(gun_front_x, PLAN_Y), (barrel_tip_x, PLAN_Y)], fill=(180, 184, 190), width=5)
 
 # Forecastle (2 pairs) -- the aft pair (twin .50 cal) sits aft of the
-# fwd Mk57 VLS complex, clear of both the VLS footprint and the Mk
-# 142's train circle; the fwd pair (foremost mounts on the ship,
+# fwd Mk57 VLS complex, clear of both the VLS footprint and the main
+# gun's train circle; the fwd pair (foremost mounts on the ship,
 # upgraded to Mk 38 25mm stabilized RWS) sits well forward of the
 # muzzle, also clear of the train circle.
 for side in (-1, 1):
@@ -889,11 +879,11 @@ leader_label((ram_fwd_cx, PLAN_Y - 13), (ram_fwd_cx + 115, PLAN_Y - 210),
 leader_label((mast_cx, PLAN_Y - 6), (mast_cx - 40, PLAN_Y - 340),
              "SPQ-9B", "horizon/periscope search radar")
 
-# Mk 142 gun label -- placed below the ship (clear of the turret/barrel
+# Main gun label -- placed below the ship (clear of the turret/barrel
 # itself) rather than above it, and still clear of the specs/loadout
 # panels regardless of x.
 leader_label((gun_cx, PLAN_Y + gun_wid_px / 2), (min(gun_cx, W - 140), PLAN_Y + 190),
-             'MK 142 8" GUN', "203 mm/65, twin barrel, true-scale")
+             "MK 45 MOD 4", "127 mm/62, single barrel, true-scale")
 
 below_entries = [
     ((hangar_box[0] + 20, hangar_box[3]), "HANGAR", None),
@@ -901,13 +891,13 @@ below_entries = [
     ((ciws_hangar_cx, PLAN_Y + hang_hb * 0.6), "PHALANX CIWS", "20mm PD gun"),
     (rhib_boxes[1], "RHIB DAVITS", "x2 (P/S), flanking hangar"),
     ((mk57_boxes[1][0] - 10, mk57_boxes[1][3]), "MK57 VLS", "Peripheral VLS for SR/MR AAW"),
-    ((gun76_positions[(1, "aft")][0], gun76_positions[(1, "aft")][1] + 8), "76mm STRALES",
+    ((mk110_positions[(1, "aft")][0], mk110_positions[(1, "aft")][1] + 8), "MK 110 57MM",
      "Defensive battery, x4 (2 P/S) flanking midships"),
     ((kingpost_tops[1][0], PLAN_Y + (kp_hb - 10)), "UNREP KINGPOSTS", "STREAM cargo/fuel transfer"),
     (uhf_pt, "SATCOM RADOMES", "EHF/SHF/UHF, mack-mounted"),
     ((srboc_boxes[1][0], srboc_boxes[1][1] + 10), "MK 36 SRBOC", "x2 (P/S), fwd superstructure roof"),
     ((pyr_x0 - 4, PLAN_Y + torp_y_off), "MK32 SVTT", "triple torpedo tubes (P/S), typ."),
-    ((gun76_aft_x + (gun76_fwd_x - gun76_aft_x) / 2, PLAN_Y + gun76_y + 8), "TWIN .50 CAL RWS",
+    ((mk110_aft_x + (mk110_fwd_x - mk110_aft_x) / 2, PLAN_Y + mk110_y + 8), "TWIN .50 CAL RWS",
      "x6, stabilized: midships, kingposts, aft forecastle"),
     ((fantail_cx, PLAN_Y + 78 + 8), "MK 38 25mm", "x4: fantail, fwd forecastle (P/S), stabilized"),
     ((nulka_boxes[6][0], nulka_boxes[6][1]), "NULKA", "Active decoy"),
@@ -1076,11 +1066,11 @@ draw.polygon([
     (mid_x1 - pyr_inset, pyr_top_y), (mid_x0 + pyr_inset, pyr_top_y),
 ], fill=PYRAMID_FILL, outline=HULL_LINE)
 
-# 76mm STRALES -- aft AND fwd representative icons (both are 2 P/S
+# Mk 110 57mm -- aft AND fwd representative icons (both are 2 P/S
 # pairs flanking midships along its length) -- + twin .50 cal (one
 # representative icon, a P/S pair flanking midships).
-gun76_profile(mid_x0 + 40, DECK_Y - 5, facing=-1)
-gun76_profile(mid_x1 - 40, DECK_Y - 5, facing=1)
+mk110_profile(mid_x0 + 40, DECK_Y - 5, facing=-1)
+mk110_profile(mid_x1 - 40, DECK_Y - 5, facing=1)
 twin50_profile((mid_x0 + mid_x1) / 2, DECK_Y - 5)
 
 mack_x0, mack_x1 = hull_x(MACK[0]), hull_x(MACK[1])
@@ -1168,28 +1158,26 @@ cell_grid((fwd_vls_x0 + fwd_vls_x1) / 2 - mk41_size / 2, fwd_vls_top,
           (fwd_vls_x0 + fwd_vls_x1) / 2 + mk41_size / 2, DECK_Y - 5,
           rows=1, cols=8, fill=MISSILE_DECK_FILL, pad=1)
 
-# Mk 142 gun -- barbette drum + boxy turret w/ sloped front glacis, twin
-# long thin barrels (shown as slightly offset parallel lines, since a
-# true side-by-side twin mount is superimposed in profile) roughly at
-# trunnion height.
+# BAE Mk 45 Mod 4 gun -- low barbette + boxy, slab-sided shroud (flat
+# sloped roof down to a flat vertical front face, vs. the OTO guns'
+# pointed nose), single thin barrel roughly at trunnion height.
 gun_base_y = DECK_Y - 5
-barbette_h = 9 * FT_PX
-turret_h = 13 * FT_PX
+barbette_h = 3 * FT_PX
+turret_h = 9 * FT_PX
 barbette_top_y = gun_base_y - barbette_h
 turret_top_y = barbette_top_y - turret_h
-barrel_y = barbette_top_y - turret_h * 0.42
+front_face_h = turret_h * 0.6
+barrel_y = barbette_top_y - front_face_h * 0.5
 gun_rear_xp = fwd_vls_x1 + 30
 gun_front_xp = gun_rear_xp + gun_len_px
 draw.rectangle([gun_rear_xp - 6, barbette_top_y, gun_front_xp + 6, gun_base_y],
                fill=(72, 78, 90), outline=HULL_LINE)
 draw.polygon([
     (gun_rear_xp, barbette_top_y), (gun_rear_xp, turret_top_y),
-    (gun_front_xp - 12, turret_top_y), (gun_front_xp, barrel_y),
-    (gun_front_xp, barbette_top_y),
+    (gun_front_xp, barbette_top_y - front_face_h), (gun_front_xp, barbette_top_y),
 ], fill=(80, 86, 98), outline=HULL_LINE)
 barrel_tip_xp = gun_front_xp + GUN_BARREL_PX
-for boff in (-3, 3):
-    draw.line([(gun_front_xp, barrel_y + boff), (barrel_tip_xp, barrel_y + boff)], fill=(180, 184, 190), width=4)
+draw.line([(gun_front_xp, barrel_y), (barrel_tip_xp, barrel_y)], fill=(180, 184, 190), width=4)
 
 dim_line((STERN_X, DECK_Y + 145), (BOW_X, DECK_Y + 145), f"{LOA_FT} ft ({round(LOA_FT * 0.3048)} m) LOA")
 dim_line((STERN_X + 95, WATERLINE_Y), (STERN_X + 95, KEEL_Y),
@@ -1201,14 +1189,14 @@ profile_above = [
     (((vls_x0 + vls_x1) / 2, mk41_hatch_y0), "MK41 VLS", "Primary armament"),
     (((fwd_vls_x0 + fwd_vls_x1) / 2, fwd_vls_top), "MK41 VLS", "Primary armament"),
     (((ld_x0 + ld_x1) / 2, ld_top), "LD-VLS", "16-cell, large-diameter"),
-    ((gun_front_xp, barrel_y), 'MK 142 8" GUN', "203 mm/65, twin barrel"),
+    ((gun_front_xp, barrel_y), "MK 45 MOD 4", "127 mm/62, single barrel"),
     ((ram_fwd_cx, oct_top_y - 24), "RIM-116 RAM", "missile CIWS"),
     ((ram_hangar_cx, hang_top - 24), "RIM-116 RAM", "missile CIWS"),
     ((mast_cx - 45, oct_top_y - 20), "PHALANX CIWS", "20mm PD gun"),
     ((ciws_hangar_cx, hang_top - 20), "PHALANX CIWS", "20mm PD gun"),
     ((kp_cx, kp_top_y), "UNREP KINGPOSTS", "STREAM cargo/fuel transfer"),
     ((plat_px + plat_p_depth / 2, plat_py - plat_p_h - 16), "500 kW LASER", "x2: fwd platform + fwd hangar roof"),
-    ((mid_x0 + 40, DECK_Y - 5 - 16), "76mm STRALES", "Defensive battery, x4 (2 P/S)"),
+    ((mid_x0 + 40, DECK_Y - 5 - 16), "MK 110 57MM", "Defensive battery, x4 (2 P/S)"),
     ((oct_x0 + 18, oct_top_y - 10), "NULKA", "Active decoy"),
     ((oct_x0 + 40, oct_top_y - 15), "MK 36 SRBOC", "x2 (P/S)"),
     ((mast_x0 + 5, slq32_y0), "AN/SLQ-32(V)7", "x2 (P/S), mast-mounted"),
@@ -1241,10 +1229,10 @@ spec_rows = [
     ("Draft", f"~{DRAFT_FT} ft ({round(DRAFT_FT * 0.3048)} m), indicative"),
     ("Displacement", "~20,500 t full load (est.)"),
     ("Speed", "30+ knots (est.)"),
-    ("Main gun", "1 x Mk 142 8\"/65 (203 mm), twin barrel"),
+    ("Main gun", "1 x BAE Mk 45 Mod 4 127mm/62, single barrel"),
     ("VLS", f"{total_mk41} Mk41 + {total_mk57} Mk57 + {total_ld} LD-VLS ({total_mk41 + total_mk57 + total_ld})"),
     ("Sonar", "SQS-53 bow-mounted, TB-37 towed array"),
-    ("Point defense", "RAM, 76mm gun, Phalanx + softkill"),
+    ("Point defense", "RAM, 57mm gun, Phalanx + softkill"),
     ("Electronic Warfare", "SLQ-32(V)7, chaff, flares, Nulka, Nixie"),
     ("DEW", "2x 500kW laser"),
     ("Propulsion", "IEP, 8 gas turbines, 4 shafts"),
@@ -1255,7 +1243,7 @@ for k, v in spec_rows:
     draw.text((spec_panel[0] + 150, ry), v, font=f_panel_row_sm, fill=TEXT_WHITE)
     ry += 22
 
-loadout_panel = (490, 158, 920, 447)
+loadout_panel = (490, 158, 920, 410)
 draw.rectangle(loadout_panel, outline=DIM_LINE, width=2)
 draw.text((loadout_panel[0] + 16, loadout_panel[1] + 14), "GUIDED-WEAPON LOADOUT (VLS)", font=f_panel_head, fill=TEXT_WHITE)
 loadout_rows = [
@@ -1269,8 +1257,6 @@ loadout_rows = [
     ("VL-ASROC", "ASW rocket"),
     ("Mk57 cell", "Larger dia., peripheral, blast-vented"),
     ("LD-VLS cell", "Large-dia. tube, strike/hypersonic"),
-    ("DART", "76/203mm guided sub-cal. round"),
-    ("VULCANO", "76/203mm long-range guided round"),
 ]
 ry = loadout_panel[1] + 45
 for k, v in loadout_rows:
