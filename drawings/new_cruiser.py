@@ -619,16 +619,15 @@ for side in (-1, 1):
                  n_modules=2, fill=MISSILE_DECK_FILL, gap=mk57_gap)
     amk57_boxes[side] = (amk57_block_x0, y0, amk57_block_x0 + amk57_block_w, y1)
 
-# Large-diameter VLS (LD-VLS): 16 cells, larger-pitch tubes for
-# strategic-strike / hypersonic-class rounds, sited in the gap between
-# the aft VLS superstructure and midships. Grown 4x4 (square footprint)
-# rather than 2x8, which pinches the fore-aft pitch down to 0.7x the
-# original 6.8 ft -- the fore-aft gap to the midships pyramid is the
-# binding constraint at this position, not the beam-wise gap to the
-# flanking Mk57 sets -- the beam dim line (below) was pulled in tight
-# against the aft VLS superstructure to leave room for it.
-LD_CELL_PX = 6.8 * 0.7 * FT_PX
-ld_t = 0.418
+# Large-diameter VLS (LD-VLS): 16 cells, larger-pitch tubes (bigger than
+# Mk57's) for strategic-strike / hypersonic-class rounds, sited in the
+# gap between the aft VLS superstructure and midships. 4x4 (square
+# footprint) at the full 1.3x pitch used for the previous 2x8 layout --
+# nudged aft (ld_t down from 0.418) vs. that layout's centering so the
+# wider 4x4 footprint still clears the midships pyramid fwd of it;
+# there's ample room on the aft side toward the VLS superstructure.
+LD_CELL_PX = 6.8 * 1.3 * FT_PX
+ld_t = 0.407
 ld_cx = hull_x(ld_t)
 ld_w, ld_h = 4 * LD_CELL_PX, 4 * LD_CELL_PX
 ld_x0, ld_y0, ld_x1, ld_y1 = ld_cx - ld_w / 2, PLAN_Y - ld_h / 2, ld_cx + ld_w / 2, PLAN_Y + ld_h / 2
