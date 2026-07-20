@@ -3,8 +3,8 @@
 Superstructure massing aft-to-fwd:
   flight deck (aftmost, w/ deck markings + an MH-60R-esque helicopter
   for scale, visible in both views) | hangar (Mk57 x3 1x4 modules P/S
-  along its periphery, RAM Mk49 launcher at its aft end, 2x Phalanx
-  CIWS on its roof) | aft VLS superstructure, full beam, raised to
+  along its periphery, RAM Mk49 launcher at its aft end, 2x Mk 36
+  SRBOC on its roof) | aft VLS superstructure, full beam, raised to
   hangar height (ref: Flight III Arleigh Burke) -- real-scale 64-cell
   Mk41 on its roof, nearly flush w/ the deck, flanked by Mk57 x2 1x4
   modules P/S | 16-cell large-diameter VLS (LD-VLS), flanked at the
@@ -16,8 +16,8 @@ Superstructure massing aft-to-fwd:
   aft-shifted stretched octagonal superstructure, full beam, shallow
   inward-canted walls, w/ SPY-6 AESA panels on its 4 diagonal faces, a
   Burke-style projecting platform on its fwd face, an octagonal
-  LPD-17-style stealth mast (SPQ-9B atop) somewhat fwd of center
-  flanked by 2x Phalanx CIWS, and a RAM Mk49 launcher at its fwd edge
+  LPD-17-style stealth mast (SPQ-9B atop) somewhat fwd of center,
+  and a RAM Mk49 launcher at its fwd edge
   | fwd 64-cell Mk41 w/ Mk57 x2 1x4 modules P/S flanking it | BAE
   Mk 45 Mod 4 127mm/62 main gun, single barrel, true-scale | ogive bow
 
@@ -204,27 +204,6 @@ def ram_launcher_profile(cx, base_y, height=24, width=22):
         for i in range(4):
             dx = cx - width / 2 + 7 + i * (width - 14) / 3
             draw.ellipse([dx - 1.2, row_y - 1.2, dx + 1.2, row_y + 1.2], fill=(28, 32, 40))
-
-
-def ciws_plan(cx, cy, r=10, angle_deg=0):
-    """Phalanx-style CIWS, plan view: white dome on a round base w/ the
-    barrel cluster shown as a short dark bar pointing the mount's arc."""
-    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(210, 214, 220), outline=HULL_LINE)
-    rad = math.radians(angle_deg)
-    dx, dy = math.cos(rad), math.sin(rad)
-    bx, by = cx + dx * (r + 9), cy + dy * (r + 9)
-    draw.line([(cx, cy), (bx, by)], fill=(60, 64, 72), width=4)
-
-
-def ciws_profile(cx, base_y, height=20, r=9, facing=1):
-    """Phalanx-style CIWS, profile view: pedestal + white R2-D2-style
-    dome w/ the gatling barrel cluster protruding from the face."""
-    draw.rectangle([cx - 4, base_y - height * 0.3, cx + 4, base_y], fill=(70, 76, 88), outline=HULL_LINE)
-    dome_cy = base_y - height * 0.3 - r
-    draw.ellipse([cx - r, dome_cy - r, cx + r, dome_cy + r], fill=(220, 224, 228), outline=HULL_LINE)
-    bx0 = cx if facing > 0 else cx - 14
-    bx1 = cx + 14 if facing > 0 else cx
-    draw.rectangle([bx0, dome_cy - 2, bx1, dome_cy + 2], fill=(60, 64, 72), outline=HULL_LINE)
 
 
 def edge_panel(p0, p1, center, thickness=10, margin=0.12, fill=(40, 70, 95)):
@@ -504,15 +483,6 @@ def deck_rect(t_range, beam_frac, fill):
     draw.rectangle([x0, PLAN_Y - hb, x1, PLAN_Y + hb], fill=fill, outline=HULL_LINE)
     return (x0, PLAN_Y - hb, x1, PLAN_Y + hb)
 
-
-# Mk 38 25mm stabilized RWS (P/S), on the fantail (aftmost mount, was
-# twin .50 cal -- upgraded for real fire control against small/fast
-# surface and air threats).
-fantail_t = 0.02
-fantail_cx = hull_x(fantail_t)
-for side in (-1, 1):
-    mk38_plan(fantail_cx, PLAN_Y + side * 78, angle_deg=90 if side > 0 else 270)
-
 fd_box = deck_rect(FLIGHT_DECK, 0.90, DECK_FILL)
 
 # Flight deck markings (touchdown circle, centerline stripe, rotor-sweep
@@ -575,10 +545,26 @@ for side in (-1, 1):
 ram_hangar_cx = hangar_box[0] + 28
 ram_launcher_plan(ram_hangar_cx, PLAN_Y)
 
-# 2x Phalanx CIWS, atop the hangar roof (P/S), facing aft.
-ciws_hangar_cx = hang_cx + 15
+# 2x Mk 36 SRBOC chaff/decoy launchers, atop the hangar roof (P/S) --
+# a second pair, aft counterpart to the one on the fwd superstructure
+# roof, in the spot the hangar's Phalanx CIWS pair used to occupy.
+srboc_hangar_cx = hang_cx + 15
+srboc_hangar_boxes = {}
 for side in (-1, 1):
-    ciws_plan(ciws_hangar_cx, PLAN_Y + side * hang_hb * 0.6, angle_deg=180)
+    sy = PLAN_Y + side * hang_hb * 0.6
+    deck_box_launcher(srboc_hangar_cx, sy, angle_deg=90, w=12, l=16, fill=(72, 78, 90), tube_dots=(2, 3))
+    srboc_hangar_boxes[side] = (srboc_hangar_cx, sy)
+
+# Mk 38 25mm stabilized RWS (P/S), flanking the hangar at the deck
+# edge (aft pair -- was on the fantail, moved forward to flank the
+# hangar instead; upgraded from twin .50 cal for real fire control
+# against small/fast surface and air threats).
+mk38_hangar_x = hangar_box[0] + 45
+mk38_hangar_boxes = {}
+for side in (-1, 1):
+    my = PLAN_Y + side * rhib_y
+    mk38_plan(mk38_hangar_x, my, angle_deg=90 if side > 0 else 270)
+    mk38_hangar_boxes[side] = (mk38_hangar_x, my)
 
 # 500 kW laser mount, fwd end of the hangar roof (opposite the RAM at the aft end).
 laser_hangar_cx = hangar_box[2] - 28
@@ -775,14 +761,19 @@ for side in (-1, 1):
     draw.rectangle([mast_cx - 7, min(yA, yB), mast_cx + 7, max(yA, yB)],
                    fill=(35, 55, 70), outline=HULL_LINE)
 
-# 2x Phalanx CIWS flanking the mast (P/S), facing fwd.
-ciws_mast_y_off = mast_hh + 18
-for side in (-1, 1):
-    ciws_plan(mast_cx, PLAN_Y + side * ciws_mast_y_off, angle_deg=0)
-
 # RAM (Mk49) trainable box launcher, fwd edge of the fwd superstructure roof.
 ram_fwd_cx = ocx + 0.8 * o_hw
 ram_launcher_plan(ram_fwd_cx, PLAN_Y)
+
+# Mk 38 25mm stabilized RWS (P/S), fwd superstructure roof, aft of the
+# mast and clear of the SRBOC/Nulka cluster (fwd pair -- was the
+# foremost mounts on the forecastle, moved aft to this roof instead).
+mk38_fwd_x = ocx - 40
+mk38_fwd_boxes = {}
+for side in (-1, 1):
+    my = PLAN_Y + side * 65
+    mk38_plan(mk38_fwd_x, my, angle_deg=90 if side > 0 else 270)
+    mk38_fwd_boxes[side] = (mk38_fwd_x, my)
 
 # 8x Nulka decoy launchers, along the roof's port/stbd edges (4 each side).
 nulka_y = o_hh - 6
@@ -843,14 +834,12 @@ draw.polygon(gun_pts, fill=(80, 86, 98), outline=HULL_LINE)
 barrel_tip_x = gun_front_x + GUN_BARREL_PX
 draw.line([(gun_front_x, PLAN_Y), (barrel_tip_x, PLAN_Y)], fill=(180, 184, 190), width=5)
 
-# Forecastle (2 pairs) -- the aft pair (twin .50 cal) sits aft of the
-# fwd Mk57 VLS complex, clear of both the VLS footprint and the main
-# gun's train circle; the fwd pair (foremost mounts on the ship,
-# upgraded to Mk 38 25mm stabilized RWS) sits well forward of the
-# muzzle, also clear of the train circle.
+# Forecastle twin .50 cal (P/S), aft of the fwd Mk57 VLS complex,
+# clear of both the VLS footprint and the main gun's train circle
+# (the foremost mounts here were Mk 38 25mm, now moved aft to the fwd
+# superstructure roof).
 for side in (-1, 1):
     twin50_plan(fwd_mk57_block_x0 - 20, PLAN_Y + side * 90, angle_deg=90 if side > 0 else 270)
-    mk38_plan(barrel_tip_x + 15, PLAN_Y + side * 68, angle_deg=90 if side > 0 else 270)
 
 dim_line((STERN_X, PLAN_Y + BEAM + 320), (BOW_X, PLAN_Y + BEAM + 320),
          f"{LOA_FT} ft ({round(LOA_FT * 0.3048)} m) LOA")
@@ -872,8 +861,6 @@ above_entries = [
 ]
 place_tiered(above_entries, ABOVE_TIERS)
 
-leader_label((mast_cx, PLAN_Y - ciws_mast_y_off), (mast_cx - 95, PLAN_Y - 175),
-             "PHALANX CIWS", "20mm PD gun")
 leader_label((ram_fwd_cx, PLAN_Y - 13), (ram_fwd_cx + 115, PLAN_Y - 210),
              "RIM-116 RAM", "missile CIWS")
 leader_label((mast_cx, PLAN_Y - 6), (mast_cx - 40, PLAN_Y - 340),
@@ -888,7 +875,7 @@ leader_label((gun_cx, PLAN_Y + gun_wid_px / 2), (min(gun_cx, W - 140), PLAN_Y + 
 below_entries = [
     ((hangar_box[0] + 20, hangar_box[3]), "HANGAR", None),
     ((ram_hangar_cx, PLAN_Y + 13), "RIM-116 RAM", "missile CIWS"),
-    ((ciws_hangar_cx, PLAN_Y + hang_hb * 0.6), "PHALANX CIWS", "20mm PD gun"),
+    (srboc_hangar_boxes[1], "MK 36 SRBOC", "x2 (P/S), hangar roof"),
     (rhib_boxes[1], "RHIB DAVITS", "x2 (P/S), flanking hangar"),
     ((mk57_boxes[1][0] - 10, mk57_boxes[1][3]), "MK57 VLS", "Peripheral VLS for SR/MR AAW"),
     ((mk110_positions[(1, "aft")][0], mk110_positions[(1, "aft")][1] + 8), "MK 110 57MM",
@@ -899,7 +886,7 @@ below_entries = [
     ((pyr_x0 - 4, PLAN_Y + torp_y_off), "MK32 SVTT", "triple torpedo tubes (P/S), typ."),
     ((mk110_aft_x + (mk110_fwd_x - mk110_aft_x) / 2, PLAN_Y + mk110_y + 8), "TWIN .50 CAL RWS",
      "x6, stabilized: midships, kingposts, aft forecastle"),
-    ((fantail_cx, PLAN_Y + 78 + 8), "MK 38 25mm", "x4: fantail, fwd forecastle (P/S), stabilized"),
+    (mk38_hangar_boxes[1], "MK 38 25mm", "x4 (2 P/S): flanking hangar, fwd superstructure roof"),
     ((nulka_boxes[6][0], nulka_boxes[6][1]), "NULKA", "Active decoy"),
     ((mast_cx, PLAN_Y + (mast_hh + 3)), "AN/SLQ-32(V)7", "x2 (P/S), mast-mounted"),
     (((spy6_edges[1][0][0] + spy6_edges[1][1][0]) / 2, spy6_edges[1][1][1]), "SPY-6 PANELS", "AESA, 4 diagonal faces"),
@@ -974,10 +961,6 @@ draw.text((BOW_X + 30, WATERLINE_Y), "DWL", font=f_dim, fill=WATERLINE, anchor="
 fd_px0, fd_px1 = hull_x(FLIGHT_DECK[0]), hull_x(FLIGHT_DECK[1])
 draw.line([(fd_px0, DECK_Y - 5), (fd_px1, DECK_Y - 5)], fill=(160, 168, 180), width=2)
 
-# Mk 38 25mm RWS -- one representative icon (P/S pairs are at the
-# fantail and fwd forecastle), on the fantail.
-mk38_profile(hull_x(fantail_t), DECK_Y - 5)
-
 heli_p_cx = (fd_px0 + fd_px1) / 2
 heli_p_base = DECK_Y - 5
 heli_gear_h = 3 * FT_PX
@@ -1013,12 +996,18 @@ hang_x0, hang_x1 = hull_x(HANGAR[0]), hull_x(HANGAR[1])
 hang_top = DECK_Y - 55
 draw.rectangle([hang_x0, hang_top, hang_x1, DECK_Y - 5], fill=SUPER_FILL, outline=HULL_LINE)
 
+# Mk 38 25mm RWS -- one representative icon per station (P/S pairs
+# flanking the hangar, at the deck edge, and on the fwd superstructure
+# roof).
+mk38_profile(mk38_hangar_x, DECK_Y - 5)
+
 # RAM (Mk49) trainable box launcher, at the aft end of the hangar roof.
 ram_launcher_profile(ram_hangar_cx, hang_top)
 
-# Phalanx CIWS on the hangar roof (one representative icon for the P/S
-# pair -- profile can't show the beam separation), facing aft.
-ciws_profile(ciws_hangar_cx, hang_top, facing=-1)
+# Mk 36 SRBOC on the hangar roof (one representative icon for the P/S
+# pair -- profile can't show the beam separation) -- the aft
+# counterpart to the pair on the fwd superstructure roof.
+deck_box_launcher(srboc_hangar_cx, hang_top - 4, angle_deg=0, w=12, l=16, fill=(72, 78, 90), tube_dots=(2, 3))
 
 # 500 kW laser mount, fwd end of the hangar roof.
 laser_profile(laser_hangar_cx, hang_top)
@@ -1122,12 +1111,12 @@ draw.rectangle([plat_px, plat_py - plat_p_h, plat_px + plat_p_depth, plat_py], f
 # 500 kW laser mount, on the fwd platform.
 laser_profile(plat_px + plat_p_depth / 2, plat_py - plat_p_h)
 
-# Phalanx CIWS flanking the mast (one representative icon), facing fwd.
-ciws_profile(mast_cx - 45, oct_top_y, facing=1)
-
 # 2x Nulka + Mk 36 SRBOC (one representative icon each) along the roof.
 deck_box_launcher(oct_x0 + 18, oct_top_y - 4, angle_deg=0, w=8, l=11, fill=(66, 72, 84))
 deck_box_launcher(oct_x0 + 40, oct_top_y - 5, angle_deg=0, w=12, l=16, fill=(72, 78, 90), tube_dots=(2, 3))
+
+# Mk 38 25mm RWS, fwd superstructure roof (one representative icon).
+mk38_profile(mk38_fwd_x, oct_top_y)
 
 # Octagonal stealth mast (LPD-17 AEM/S-style), somewhat fwd of center,
 # w/ an SPQ-9B radar on a short pedestal atop it, and an AN/SLQ-32(V)7
@@ -1192,8 +1181,7 @@ profile_above = [
     ((gun_front_xp, barrel_y), "MK 45 MOD 4", "127 mm/62, single barrel"),
     ((ram_fwd_cx, oct_top_y - 24), "RIM-116 RAM", "missile CIWS"),
     ((ram_hangar_cx, hang_top - 24), "RIM-116 RAM", "missile CIWS"),
-    ((mast_cx - 45, oct_top_y - 20), "PHALANX CIWS", "20mm PD gun"),
-    ((ciws_hangar_cx, hang_top - 20), "PHALANX CIWS", "20mm PD gun"),
+    ((srboc_hangar_cx, hang_top - 20), "MK 36 SRBOC", "x2 (P/S), hangar roof"),
     ((kp_cx, kp_top_y), "UNREP KINGPOSTS", "STREAM cargo/fuel transfer"),
     ((plat_px + plat_p_depth / 2, plat_py - plat_p_h - 16), "500 kW LASER", "x2: fwd platform + fwd hangar roof"),
     ((mid_x0 + 40, DECK_Y - 5 - 16), "MK 110 57MM", "Defensive battery, x4 (2 P/S)"),
@@ -1201,7 +1189,7 @@ profile_above = [
     ((oct_x0 + 40, oct_top_y - 15), "MK 36 SRBOC", "x2 (P/S)"),
     ((mast_x0 + 5, slq32_y0), "AN/SLQ-32(V)7", "x2 (P/S), mast-mounted"),
     (((mid_x0 + mid_x1) / 2, DECK_Y - 5 - 8), "TWIN .50 CAL RWS", "x6, stabilized (P/S)"),
-    ((hull_x(fantail_t), DECK_Y - 5 - 8), "MK 38 25mm", "x4, stabilized (P/S)"),
+    ((mk38_hangar_x, DECK_Y - 5 - 8), "MK 38 25mm", "x4 (2 P/S), stabilized"),
     ((mast_cx, spq_top_y - 14), "SPQ-9B", "horizon/periscope search radar"),
     ((mack_top_cx, mack_top_y), "SATCOM RADOMES", "EHF/SHF/UHF, mack-mounted"),
     ((mast_x1 - 3, mast_top_y + 14 - 10), "SURFACE SEARCH RADAR", "x2: mast + mack"),
@@ -1232,7 +1220,7 @@ spec_rows = [
     ("Main gun", "1 x BAE Mk 45 Mod 4 127mm/62, single barrel"),
     ("VLS", f"{total_mk41} Mk41 + {total_mk57} Mk57 + {total_ld} LD-VLS ({total_mk41 + total_mk57 + total_ld})"),
     ("Sonar", "SQS-53 bow-mounted, TB-37 towed array"),
-    ("Point defense", "RAM, 57mm gun, Phalanx + softkill"),
+    ("Point defense", "RAM, 57mm gun + softkill"),
     ("Electronic Warfare", "SLQ-32(V)7, chaff, flares, Nulka, Nixie"),
     ("DEW", "2x 500kW laser"),
     ("Propulsion", "IEP, 8 gas turbines, 4 shafts"),
