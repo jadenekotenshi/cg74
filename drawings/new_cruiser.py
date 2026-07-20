@@ -621,17 +621,18 @@ for side in (-1, 1):
 
 # Large-diameter VLS (LD-VLS): 16 cells, larger-pitch tubes for
 # strategic-strike / hypersonic-class rounds, sited in the gap between
-# the aft VLS superstructure and midships. Pitch scaled up 1.3x from the
-# original 6.8 ft (down from 1.5x when the cell count doubled 8->16,
-# grown as 2x8 rather than 4x4 to keep the tight fore-aft gap to the
-# midships pyramid) -- the beam dim line (below) was pulled in tight
+# the aft VLS superstructure and midships. Grown 4x4 (square footprint)
+# rather than 2x8, which pinches the fore-aft pitch down to 0.7x the
+# original 6.8 ft -- the fore-aft gap to the midships pyramid is the
+# binding constraint at this position, not the beam-wise gap to the
+# flanking Mk57 sets -- the beam dim line (below) was pulled in tight
 # against the aft VLS superstructure to leave room for it.
-LD_CELL_PX = 6.8 * 1.3 * FT_PX
+LD_CELL_PX = 6.8 * 0.7 * FT_PX
 ld_t = 0.418
 ld_cx = hull_x(ld_t)
-ld_w, ld_h = 2 * LD_CELL_PX, 8 * LD_CELL_PX
+ld_w, ld_h = 4 * LD_CELL_PX, 4 * LD_CELL_PX
 ld_x0, ld_y0, ld_x1, ld_y1 = ld_cx - ld_w / 2, PLAN_Y - ld_h / 2, ld_cx + ld_w / 2, PLAN_Y + ld_h / 2
-cell_grid(ld_x0, ld_y0, ld_x1, ld_y1, rows=8, cols=2, fill=MISSILE_DECK_FILL, pad=2)
+cell_grid(ld_x0, ld_y0, ld_x1, ld_y1, rows=4, cols=4, fill=MISSILE_DECK_FILL, pad=2)
 
 # Midships: truncated pyramid (base + inset top) topped by a mack that
 # tapers in more sharply (a smaller top relative to its own base). The
@@ -864,9 +865,6 @@ for side in (-1, 1):
 
 dim_line((STERN_X, PLAN_Y + BEAM + 320), (BOW_X, PLAN_Y + BEAM + 320),
          f"{LOA_FT} ft ({round(LOA_FT * 0.3048)} m) LOA")
-max_beam_t = 0.352  # pulled in tight against the aft VLS superstructure to clear the enlarged LD-VLS
-dim_line((hull_x(max_beam_t), PLAN_Y - half_beam(max_beam_t)), (hull_x(max_beam_t), PLAN_Y + half_beam(max_beam_t)),
-          f"{BEAM_FT} ft beam")
 
 ABOVE_TIERS = [PLAN_Y - (130 + 40 * i) for i in range(5)]  # matches len(above_entries): no tier wrap, so no item can land close enough to the hull edge to clip it
 BELOW_TIERS = [PLAN_Y + (120 + 40 * i) for i in range(7)]
